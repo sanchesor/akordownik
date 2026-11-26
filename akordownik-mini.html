@@ -261,6 +261,11 @@ button { font: inherit; color: inherit; }
 .kb.narrow .tag { display: none !important; }
 .kb.narrow .bk .dot, .kb.narrow .key.ghost .dot { border-width: 1.5px; }
 .kb.tiny .oct:not(.mid) { display: none; }
+.kb.fill .mark { display: none; }
+.kb.fill .wk.on { background: linear-gradient(180deg, #7E1024 0, #C8263F 10%, #BC2039 84%, #95172E 100%); box-shadow: 0 1px 0 #6E0C1E, 0 2px 0 #0005; }
+.kb.fill .bk.on { background: linear-gradient(180deg, #000 0, #D02A45 5%, #B8213B 45%, #861429 100%); box-shadow: 0 2px 3px -1px #000a, inset 0 -3px 0 #4A0815; }
+.kb.fill .wk.ghost { background: linear-gradient(180deg, #CDB88A 0, #F3E2B0 10%, #EBD49A 84%, #D6BD7E 100%); }
+.kb.fill .bk.ghost { background: linear-gradient(180deg, #000 0, #8A6A22 5%, #6E531A 40%, #4D3910 100%); }
 
 @media (max-width: 420px) {
   .ch { font-size: 15px; padding: 5px 8px; }
@@ -321,6 +326,14 @@ button { font: inherit; color: inherit; }
     <p class="note">Oktawy w każdą stronę od C4</p>
     <div class="seg" id="rangeSeg" role="group" aria-label="Zakres klawiatury"></div>
     <p class="note" id="rangeNote"></p>
+  </section>
+  <section class="set">
+    <h3>Wciśnięte klawisze</h3>
+    <div class="seg" id="keyStyleSeg" role="group" aria-label="Wygląd wciśniętych klawiszy">
+      <button type="button" id="ks-fill" data-ks="fill">Kolor</button>
+      <button type="button" id="ks-dots" data-ks="dots">Kółka z nazwą</button>
+    </div>
+    <p class="note">Złoty kolor lub przerywane kółko oznacza dźwięk, którego brakuje do wybranego akordu.</p>
   </section>
 </aside>
 
@@ -418,7 +431,8 @@ for (let pc = 0; pc < 12; pc++) {
   }
 }
 
-const state = { sel: new Set(), notation: 'intl', active: null, range: DEFAULT_RANGE, midiAuto: false };
+const KEY_STYLES = ['fill', 'dots'];
+const state = { sel: new Set(), notation: 'intl', active: null, range: DEFAULT_RANGE, midiAuto: false, keyStyle: 'fill' };
 
 /* ---------- MIDI state (declared early: prefs and render read it) ---------- */
 const midi = {
@@ -438,9 +452,10 @@ const prefs = {
     if (p.midiMode === 'live' || p.midiMode === 'latch') midi.mode = p.midiMode;
     if (RANGES[p.miniRange]) state.range = +p.miniRange;
     state.midiAuto = p.miniMidi === true;
+    if (KEY_STYLES.includes(p.miniKeyStyle)) state.keyStyle = p.miniKeyStyle;
   },
   save() {
-    const mine = { midiMode: midi.mode, miniRange: state.range, miniMidi: state.midiAuto };
+    const mine = { midiMode: midi.mode, miniRange: state.range, miniMidi: state.midiAuto, miniKeyStyle: state.keyStyle };
     try { localStorage.setItem(PREFS_KEY, JSON.stringify({ ...this.read(), ...mine })); } catch (e) { /* storage unavailable */ }
   }
 };
@@ -595,7 +610,15 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawer.cla
   });
 })();
 
+document.querySelectorAll('[data-ks]').forEach(b => b.addEventListener('click', () => {
+  state.keyStyle = b.dataset.ks;
+  prefs.save();
+  render();
+}));
+
 function renderSettings() {
+  kb.classList.toggle('fill', state.keyStyle === 'fill');
+  document.querySelectorAll('[data-ks]').forEach(b => b.setAttribute('aria-pressed', b.dataset.ks === state.keyStyle));
   document.querySelectorAll('[data-range]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.range === state.range));
   document.getElementById('rangeNote').innerHTML =
     `<b>${defaultOctaveLabel(LOW)}–${defaultOctaveLabel(HIGH)}</b> · ${HIGH - LOW + 1} klawiszy`;
