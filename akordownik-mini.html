@@ -165,8 +165,40 @@ button { font: inherit; color: inherit; }
 .progress span { width: 26px; height: 5px; border-radius: 3px; background: var(--line); }
 .progress span.on { background: var(--felt); }
 
-.staffpane { display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 6px 8px 8px; gap: 4px; overflow: hidden; }
-.now { font-family: var(--f-display); font-variation-settings: "opsz" 96; font-weight: 750; font-size: 26px; line-height: 1.1; letter-spacing: -.02em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.1em; }
+.staffpane { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 6px 8px 8px; gap: 4px; overflow: hidden; }
+.gear {
+  position: absolute; top: 5px; right: 5px; z-index: 3; width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--raise); color: var(--muted); cursor: pointer;
+  display: grid; place-items: center; padding: 0;
+}
+.gear svg { width: 18px; height: 18px; }
+.gear::after { content: ""; position: absolute; top: 2px; right: 2px; width: 9px; height: 9px; border-radius: 50%; background: var(--line); border: 2px solid var(--raise); }
+.gear.live::after { background: var(--felt); }
+
+.scrim { position: fixed; inset: 0; z-index: 19; background: rgba(8, 10, 14, .38); }
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 20; width: min(330px, 88vw);
+  background: var(--surface); border-left: 1px solid var(--line); box-shadow: -18px 0 40px -24px #000a;
+  transform: translateX(105%); transition: transform .22s ease;
+  overflow-y: auto; overscroll-behavior: contain;
+  display: grid; align-content: start; gap: 22px;
+  padding-top: max(14px, env(safe-area-inset-top, 0px)); padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  padding-left: 18px; padding-right: max(18px, env(safe-area-inset-right, 0px));
+}
+.drawer.open { transform: none; }
+.dh { display: flex; align-items: center; justify-content: space-between; }
+.dh h2 { margin: 0; font-family: var(--f-display); font-size: 20px; font-weight: 700; }
+.close { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--raise); cursor: pointer; font-size: 20px; line-height: 1; }
+.set { display: grid; gap: 8px; justify-items: start; }
+.set h3 { margin: 0; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.note { margin: 0; font-size: 13px; color: var(--muted); }
+.note b { color: var(--ink); font-weight: 600; }
+.btn { border: 1px solid var(--line); background: var(--raise); border-radius: 8px; padding: 9px 16px; cursor: pointer; font-weight: 600; font-size: 14px; }
+.btn.primary { background: var(--felt); border-color: var(--felt); color: var(--felt-ink); }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; background: var(--raise); padding: 2px; gap: 2px; }
+.seg button { border: 0; background: transparent; border-radius: 6px; padding: 8px 13px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.now { font-family: var(--f-display); font-variation-settings: "opsz" 96; font-weight: 750; font-size: 26px; line-height: 1.1; letter-spacing: -.02em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.1em; padding-right: 38px; }
 .now .sl { color: var(--muted); font-weight: 500; }
 .staffbox { min-height: 0; background: var(--raise); border: 1px solid var(--line); border-radius: 9px; padding: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .staff { display: block; width: 100%; height: 100%; }
@@ -184,26 +216,15 @@ button { font: inherit; color: inherit; }
 .toast:empty { display: none; }
 
 /* Keyboard */
-.case { background: var(--case); border-radius: 12px; padding: 6px 6px 0; border: 1px solid var(--line); }
-.bar { display: flex; align-items: center; gap: 6px; padding: 0 2px 6px; min-width: 0; }
-.bar .grow { flex: 1; }
-.btn { border: 1px solid #3A3E49; background: #1F222A; color: #E5E8EE; border-radius: 7px; padding: 5px 11px; cursor: pointer; font-weight: 600; font-size: 13px; }
-.seg { display: inline-flex; border: 1px solid #3A3E49; border-radius: 7px; background: #1F222A; padding: 2px; gap: 2px; }
-.seg button { border: 0; background: transparent; border-radius: 5px; padding: 3px 9px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: #97A0B1; white-space: nowrap; }
-.seg button[aria-pressed="true"] { background: #E5E8EE; color: #14161B; }
-.midi { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
-.midi::before { content: ""; width: 9px; height: 9px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px #97A0B1; flex: none; }
-.midi[aria-pressed="true"] { border-color: var(--key-felt); }
-.midi[aria-pressed="true"]::before { background: var(--key-felt); box-shadow: none; }
-#midiLbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 18ch; }
-.felt { height: 5px; background: linear-gradient(#6E0C1E, var(--key-felt) 60%, #7A1024); border-radius: 2px 2px 0 0; }
+.case { background: var(--case); border-radius: 8px; padding: 0 3px; overflow: hidden; }
+.felt { height: 4px; margin: 0 -3px; background: linear-gradient(#6E0C1E, var(--key-felt) 60%, #7A1024); }
 .kb {
-  --n: 21; --gap: 2px;
+  --n: 29; --gap: 1.5px;
   --ww: calc((100% - (var(--n) - 1) * var(--gap)) / var(--n));
   --bw: calc(var(--ww) * .6);
   container-type: inline-size;
   position: relative; display: flex; gap: var(--gap);
-  height: max(110px, min(42dvh, 34vw, 300px)); padding-bottom: 6px;
+  height: max(110px, min(42dvh, 34vw, 300px)); padding-bottom: 5px;
   user-select: none; -webkit-user-select: none; touch-action: manipulation;
 }
 .key { position: relative; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -217,28 +238,29 @@ button { font: inherit; color: inherit; }
   box-shadow: 0 4px 6px -2px #000a, inset 0 -5px 0 #000;
 }
 .bk.on { box-shadow: 0 2px 3px -1px #000a, inset 0 -3px 0 #000; background: linear-gradient(180deg, #000 0, #50525C 4%, #2B2C33 40%, #18181C 100%); }
-.mark { position: absolute; left: 50%; transform: translateX(-50%); bottom: min(14px, 2cqw); display: grid; justify-items: center; gap: 3px; pointer-events: none; }
-.bk .mark { bottom: min(10px, 1.5cqw); }
+.mark { position: absolute; left: 50%; transform: translateX(-50%); bottom: min(14px, calc(40cqw / var(--n))); display: grid; justify-items: center; gap: 3px; pointer-events: none; }
+.bk .mark { bottom: min(10px, calc(30cqw / var(--n))); }
 .dot {
-  display: none; place-items: center; min-width: min(30px, 4.4cqw); height: min(30px, 4.4cqw); padding: 0 min(4px, .5cqw);
-  border-radius: 999px; font-family: var(--f-body); font-weight: 700; font-size: min(12px, 2.05cqw); line-height: 1;
+  display: none; place-items: center;
+  min-width: min(30px, calc(90cqw / var(--n))); height: min(30px, calc(90cqw / var(--n))); padding: 0 min(4px, calc(10cqw / var(--n)));
+  border-radius: 999px; font-family: var(--f-body); font-weight: 700; font-size: min(12px, calc(43cqw / var(--n))); line-height: 1;
   background: var(--key-felt); color: #fff; box-shadow: 0 2px 4px -1px #0006; white-space: nowrap;
 }
-.bk .dot { min-width: min(24px, 2.8cqw); height: min(24px, 2.8cqw); font-size: min(10.5px, 1.75cqw); padding: 0 1px; }
-.tag { display: none; font-family: var(--f-mono); font-size: min(10.5px, 1.8cqw); font-weight: 600; color: #6C6656; white-space: nowrap; }
-.bk .tag { color: #B9BCC6; font-size: min(9.5px, 1.6cqw); }
+.bk .dot { min-width: min(24px, calc(57cqw / var(--n))); height: min(24px, calc(57cqw / var(--n))); font-size: min(10.5px, calc(36cqw / var(--n))); padding: 0 1px; }
+.tag { display: none; font-family: var(--f-mono); font-size: min(10.5px, calc(38cqw / var(--n))); font-weight: 600; color: #6C6656; white-space: nowrap; }
+.bk .tag { color: #B9BCC6; font-size: min(9.5px, calc(34cqw / var(--n))); }
 .key.on .dot, .key.ghost .dot { display: grid; }
 .key.on .tag, .key.ghost .tag { display: block; }
 .key.ghost .dot { background: transparent; border: 2px dashed var(--key-brass); color: var(--key-brass); box-shadow: none; }
 .bk.ghost .dot { color: #E2B860; border-color: #E2B860; }
 .key.ghost .tag { color: var(--key-brass); }
 .bk.ghost .tag { color: #E2B860; }
-.oct { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-family: var(--f-mono); font-size: min(10px, 1.7cqw); color: #9A9484; pointer-events: none; }
+.oct { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-family: var(--f-mono); font-size: min(10px, calc(36cqw / var(--n))); color: #9A9484; pointer-events: none; }
+.oct.mid { color: var(--key-felt); font-weight: 600; }
 .key.on .oct, .key.ghost .oct { display: none; }
-@container (max-width: 520px) {
-  .tag { display: none !important; }
-  .bk .dot { border-width: 1.5px; }
-}
+.kb.narrow .tag { display: none !important; }
+.kb.narrow .bk .dot, .kb.narrow .key.ghost .dot { border-width: 1.5px; }
+.kb.tiny .oct:not(.mid) { display: none; }
 
 @media (max-width: 420px) {
   .ch { font-size: 15px; padding: 5px 8px; }
@@ -248,11 +270,7 @@ button { font: inherit; color: inherit; }
 }
 @media (max-height: 500px) and (orientation: landscape) {
   body { gap: 6px; padding-top: max(6px, env(safe-area-inset-top, 0px)); padding-bottom: max(6px, env(safe-area-inset-bottom, 0px)); }
-  .kb { height: max(92px, 34dvh); padding-bottom: 4px; }
-  .case { padding-top: 4px; }
-  .bar { padding-bottom: 4px; }
-  .btn { padding: 3px 10px; }
-  .seg button { padding: 2px 8px; }
+  .kb { height: max(92px, 38dvh); padding-bottom: 4px; }
   .staffpane { grid-template-columns: auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); align-items: center; gap: 8px; padding: 6px; }
   .now { font-size: 24px; min-width: 2.5ch; max-width: 9ch; }
   .staffbox { height: 100%; }
@@ -270,28 +288,54 @@ button { font: inherit; color: inherit; }
   <section class="pane staffpane" aria-label="Zapis nutowy">
     <p class="now" id="now"></p>
     <div class="staffbox" id="staffbox"></div>
+    <button type="button" class="gear" id="openSettings" aria-label="Ustawienia" aria-controls="drawer" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+    </button>
   </section>
   <div class="toast" id="status" role="status" aria-live="polite"></div>
 </main>
 
 <section class="case" aria-label="Klawiatura">
-  <div class="bar">
-    <button type="button" class="btn midi" id="midiBtn" aria-pressed="false" title="Połącz z keyboardem MIDI (Web MIDI)"><span id="midiLbl">MIDI</span></button>
-    <div class="seg" id="midiMode" role="group" aria-label="Tryb MIDI" hidden>
-      <button type="button" data-mm="live" title="Zaznaczone są tylko klawisze trzymane teraz (z pedałem sustain też te przytrzymane pedałem)">Na żywo</button>
-      <button type="button" data-mm="latch" title="Akord zostaje na ekranie po puszczeniu klawiszy, aż zagrasz następny">Zatrzask</button>
-    </div>
-    <span class="grow"></span>
-    <button type="button" class="btn" id="clear">Wyczyść</button>
-  </div>
   <div class="felt"></div>
-  <div class="kb" id="kb" role="group" aria-label="Klawisze od C3 do B5"></div>
+  <div class="kb" id="kb" role="group" aria-label="Klawiatura"></div>
 </section>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" aria-label="Ustawienia" inert>
+  <header class="dh">
+    <h2>Ustawienia</h2>
+    <button type="button" class="close" id="closeSettings" aria-label="Zamknij ustawienia">×</button>
+  </header>
+  <section class="set">
+    <h3>Keyboard MIDI</h3>
+    <p class="note" id="midiNote">Nie połączono.</p>
+    <button type="button" class="btn" id="midiBtn">Połącz</button>
+    <div class="seg" id="midiMode" role="group" aria-label="Tryb MIDI" hidden>
+      <button type="button" id="mm-live" data-mm="live">Na żywo</button>
+      <button type="button" id="mm-latch" data-mm="latch">Zatrzask</button>
+    </div>
+    <p class="note" id="midiModeNote" hidden></p>
+  </section>
+  <section class="set">
+    <h3>Zakres klawiatury</h3>
+    <p class="note">Oktawy w każdą stronę od C4</p>
+    <div class="seg" id="rangeSeg" role="group" aria-label="Zakres klawiatury"></div>
+    <p class="note" id="rangeNote"></p>
+  </section>
+</aside>
 
 <script>
 const LETTERS = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 const LETTER_PC = [0, 2, 4, 5, 7, 9, 11];
-const LOW = 48, HIGH = 83;
+const MIDDLE_C = 60;
+const RANGES = {
+  1: { low: 48, high: 72, label: '±1' },
+  2: { low: 36, high: 84, label: '±2' },
+  3: { low: 24, high: 96, label: '±3' },
+  88: { low: 21, high: 108, label: '88' }
+};
+const DEFAULT_RANGE = 2;
+let LOW = RANGES[DEFAULT_RANGE].low, HIGH = RANGES[DEFAULT_RANGE].high;
 const MAX_NOTES = 12;
 const BLACK = new Set([1, 3, 6, 8, 10]);
 const mod = (n, m) => ((n % m) + m) % m;
@@ -374,7 +418,7 @@ for (let pc = 0; pc < 12; pc++) {
   }
 }
 
-const state = { sel: new Set(), notation: 'intl', active: null };
+const state = { sel: new Set(), notation: 'intl', active: null, range: DEFAULT_RANGE, midiAuto: false };
 
 /* ---------- MIDI state (declared early: prefs and render read it) ---------- */
 const midi = {
@@ -392,9 +436,12 @@ const prefs = {
     const p = this.read();
     if (p.notation === 'pl' || p.notation === 'intl') state.notation = p.notation;
     if (p.midiMode === 'live' || p.midiMode === 'latch') midi.mode = p.midiMode;
+    if (RANGES[p.miniRange]) state.range = +p.miniRange;
+    state.midiAuto = p.miniMidi === true;
   },
   save() {
-    try { localStorage.setItem(PREFS_KEY, JSON.stringify({ ...this.read(), midiMode: midi.mode })); } catch (e) { /* storage unavailable */ }
+    const mine = { midiMode: midi.mode, miniRange: state.range, miniMidi: state.midiAuto };
+    try { localStorage.setItem(PREFS_KEY, JSON.stringify({ ...this.read(), ...mine })); } catch (e) { /* storage unavailable */ }
   }
 };
 
@@ -452,7 +499,9 @@ function missingPitches(chord, A) {
 /* ---------- Keyboard ---------- */
 const kb = document.getElementById('kb');
 const keyEls = new Map();
-(function buildKeyboard() {
+function buildKeyboard() {
+  kb.textContent = '';
+  keyEls.clear();
   let whiteIndex = -1;
   for (let m = LOW; m <= HIGH; m++) {
     const black = BLACK.has(m % 12);
@@ -463,11 +512,30 @@ const keyEls = new Map();
     el.id = 'key-' + m;
     el.dataset.midi = m;
     if (black) el.style.setProperty('--i', whiteIndex);
-    el.innerHTML = `<span class="mark"><span class="tag"></span><span class="dot"></span></span>${m % 12 === 0 ? `<span class="oct">C${m / 12 - 1}</span>` : ''}`;
+    const octLabel = m % 12 === 0 ? `<span class="oct${m === MIDDLE_C ? ' mid' : ''}">C${m / 12 - 1}</span>` : '';
+    el.innerHTML = `<span class="mark"><span class="tag"></span><span class="dot"></span></span>${octLabel}`;
     kb.appendChild(el);
     keyEls.set(m, el);
   }
-})();
+  kb.style.setProperty('--n', whiteIndex + 1);
+  kb.setAttribute('aria-label', `Klawisze od ${defaultOctaveLabel(LOW)} do ${defaultOctaveLabel(HIGH)}`);
+  fitKeyLabels();
+}
+
+function fitKeyLabels() {
+  const whiteWidth = kb.clientWidth / (+kb.style.getPropertyValue('--n') || 1);
+  kb.classList.toggle('narrow', whiteWidth < 26);
+  kb.classList.toggle('tiny', whiteWidth < 15);
+}
+if (window.ResizeObserver) new ResizeObserver(fitKeyLabels).observe(kb);
+
+function setRange(range) {
+  state.range = range;
+  LOW = RANGES[range].low;
+  HIGH = RANGES[range].high;
+  state.sel = new Set(fitToRange(state.sel));
+  buildKeyboard();
+}
 
 function flash(msg) {
   const s = document.getElementById('status');
@@ -487,12 +555,52 @@ kb.addEventListener('click', e => {
   const key = e.target.closest('.key');
   if (key) toggle(+key.dataset.midi);
 });
-document.getElementById('clear').addEventListener('click', () => {
-  state.sel.clear();
-  state.active = null;
-  midi.latched.clear();
-  render();
-});
+/* ---------- Settings drawer ---------- */
+const drawer = document.getElementById('drawer');
+const scrim = document.getElementById('scrim');
+const gear = document.getElementById('openSettings');
+function openSettings() {
+  drawer.inert = false;
+  drawer.classList.add('open');
+  scrim.hidden = false;
+  gear.setAttribute('aria-expanded', 'true');
+  document.getElementById('closeSettings').focus({ preventScroll: true });
+}
+function closeSettings() {
+  drawer.classList.remove('open');
+  drawer.inert = true;
+  scrim.hidden = true;
+  gear.setAttribute('aria-expanded', 'false');
+  gear.focus({ preventScroll: true });
+}
+gear.addEventListener('click', openSettings);
+document.getElementById('closeSettings').addEventListener('click', closeSettings);
+scrim.addEventListener('click', closeSettings);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawer.classList.contains('open')) closeSettings(); });
+
+(function buildRangeControl() {
+  const seg = document.getElementById('rangeSeg');
+  Object.entries(RANGES).forEach(([key, r]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.id = 'range-' + key;
+    b.dataset.range = key;
+    b.textContent = r.label;
+    b.addEventListener('click', () => {
+      setRange(+key);
+      prefs.save();
+      render();
+    });
+    seg.appendChild(b);
+  });
+})();
+
+function renderSettings() {
+  document.querySelectorAll('[data-range]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.range === state.range));
+  document.getElementById('rangeNote').innerHTML =
+    `<b>${defaultOctaveLabel(LOW)}–${defaultOctaveLabel(HIGH)}</b> · ${HIGH - LOW + 1} klawiszy`;
+}
+
 document.getElementById('chords').addEventListener('click', e => {
   const c = e.target.closest('[data-id]');
   if (c) { state.active = c.dataset.id; render(); }
@@ -571,6 +679,7 @@ function render() {
   });
 
   renderMidiUI();
+  renderSettings();
   renderChords(A);
   renderStaff(A, active, ghosts);
   try { history.replaceState(null, '', '#' + (A.mids.length ? 'n' + A.mids.join('-') : '')); } catch (e) { /* hash not writable */ }
@@ -686,6 +795,8 @@ async function midiConnect() {
     return;
   }
   midi.on = true;
+  state.midiAuto = true;
+  prefs.save();
   midi.access.onstatechange = () => midiBind();
   midiBind();
 }
@@ -693,13 +804,27 @@ function midiDisconnect() {
   if (midi.access) midi.access.inputs.forEach(inp => { inp.onmidimessage = null; });
   midi.on = false; midi.names = [];
   midi.held.clear(); midi.sustained.clear(); midi.latched.clear(); midi.sustain = false;
+  state.midiAuto = false;
+  prefs.save();
   renderMidiUI();
 }
+const MIDI_MODE_NOTES = {
+  live: 'Widać klawisze trzymane teraz. Z pedałem sustain także te trzymane pedałem.',
+  latch: 'Akord zostaje na ekranie po puszczeniu klawiszy, aż zagrasz następny.'
+};
 function renderMidiUI() {
-  document.getElementById('midiBtn').setAttribute('aria-pressed', midi.on);
-  document.getElementById('midiLbl').textContent = !midi.on ? 'MIDI' : midi.names.length ? midi.names[0] : 'brak urządzenia';
+  const btn = document.getElementById('midiBtn');
+  btn.textContent = midi.on ? 'Rozłącz' : 'Połącz';
+  btn.classList.toggle('primary', !midi.on);
+  document.getElementById('midiNote').innerHTML = !midi.on ? 'Nie połączono.'
+    : midi.names.length ? `Połączono: <b>${midi.names.join(', ')}</b>` : 'Połączono, ale nie widzę urządzenia. Podłącz i włącz keyboard.';
   document.getElementById('midiMode').hidden = !midi.on;
+  const modeNote = document.getElementById('midiModeNote');
+  modeNote.hidden = !midi.on;
+  modeNote.textContent = MIDI_MODE_NOTES[midi.mode];
   document.querySelectorAll('[data-mm]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mm === midi.mode));
+  gear.classList.toggle('live', midi.on && midi.names.length > 0);
+  gear.setAttribute('aria-label', midi.on && midi.names.length ? `Ustawienia (MIDI: ${midi.names[0]})` : 'Ustawienia');
 }
 document.getElementById('midiBtn').addEventListener('click', () => { if (midi.on) midiDisconnect(); else midiConnect(); });
 document.querySelectorAll('[data-mm]').forEach(b => b.addEventListener('click', () => {
@@ -711,18 +836,21 @@ document.querySelectorAll('[data-mm]').forEach(b => b.addEventListener('click', 
 
 /* ---------- Boot ---------- */
 prefs.load();
+setRange(state.range);
 (function readHash() {
   const m = /^#n(\d+(?:-\d+)*)$/.exec(location.hash);
   if (!m) return;
-  const notes = m[1].split('-').map(Number).filter(n => n >= LOW && n <= HIGH).slice(0, MAX_NOTES);
-  state.sel = new Set(notes);
+  const notes = m[1].split('-').map(Number).filter(n => n >= 0 && n <= 127);
+  state.sel = new Set(fitToRange(notes).slice(0, MAX_NOTES));
 })();
 render();
-try {
-  if (navigator.requestMIDIAccess && navigator.permissions) {
-    navigator.permissions.query({ name: 'midi' }).then(p => { if (p.state === 'granted') midiConnect(); }).catch(() => {});
-  }
-} catch (e) { /* permissions API unavailable */ }
+(function autoConnectMidi() {
+  if (!navigator.requestMIDIAccess) return;
+  if (state.midiAuto) { midiConnect(); return; }
+  try {
+    navigator.permissions?.query({ name: 'midi' }).then(p => { if (p.state === 'granted') midiConnect(); }).catch(() => {});
+  } catch (e) { /* permissions API unavailable */ }
+})();
 </script>
 </body>
 </html>
