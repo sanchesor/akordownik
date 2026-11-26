@@ -483,6 +483,19 @@ const suffixHTML = s => accHTML(s.replace(/b(?=\d)/g, '♭').replace(/#(?=\d)/g,
 const octaveOf = (midi, { l, a }) => Math.round((midi - a - LETTER_PC[l]) / 12) - 1;
 const defaultOctaveLabel = midi => noteText(DEFAULT_SPELLING[midi % 12]) + (Math.floor(midi / 12) - 1);
 
+const ENHARMONIC = { 1: { l: 1, a: -1 }, 3: { l: 1, a: 1 }, 6: { l: 4, a: -1 }, 8: { l: 4, a: 1 }, 10: { l: 5, a: 1 } };
+function spellApart(mids) {
+  const spelled = new Map(), usedSteps = new Set();
+  const staffStep = (m, s) => octaveOf(m, s) * 7 + s.l;
+  const place = (m, s) => { spelled.set(m, s); usedSteps.add(staffStep(m, s)); };
+  mids.filter(m => !BLACK.has(m % 12)).forEach(m => place(m, DEFAULT_SPELLING[m % 12]));
+  mids.filter(m => BLACK.has(m % 12)).forEach(m => {
+    const options = [DEFAULT_SPELLING[m % 12], ENHARMONIC[m % 12]];
+    place(m, options.find(s => !usedSteps.has(staffStep(m, s))) || options[0]);
+  });
+  return spelled;
+}
+
 function symbolHTML(c, bassPc) {
   const slash = bassPc != null && c.pc !== bassPc
     ? `<span class="sl">/${noteHTML(c.tones.find(t => t.pc === bassPc))}</span>` : '';
@@ -631,7 +644,7 @@ document.getElementById('chords').addEventListener('click', e => {
 
 /* ---------- Staff ---------- */
 function staffSVG(notes) {
-  const HS = 5, GAP = 34, X0 = 92, W = 190, PAD = 10;
+  const HS = 5, GAP = 34, X0 = 92, W = 190, PAD = 10, F_CLEF_DOTS_ABOVE_BASELINE = 26.5, HEAD_WIDTH = 15, NATURAL_SIGN = '♮';
   notes.forEach(n => { n.step = octaveOf(n.midi, n) * 7 + n.l; n.treble = n.midi >= 60; });
   const tre = notes.filter(n => n.treble), bas = notes.filter(n => !n.treble);
   const top = Math.max(40, ...tre.map(n => n.step + 2));
@@ -644,25 +657,27 @@ function staffSVG(notes) {
   [18, 20, 22, 24, 26].forEach(s => out.push(`<line class="st-line" x1="10" x2="${W - 8}" y1="${yB(s)}" y2="${yB(s)}"/>`));
   out.push(`<line class="st-sys" x1="10" x2="10" y1="${yT(38)}" y2="${yB(18)}"/>`);
   out.push(`<text class="st-clef" x="16" y="${yT(32)}" font-size="40">𝄞</text>`);
-  out.push(`<text class="st-clef" x="16" y="${yB(24)}" font-size="40">𝄢</text>`);
+  out.push(`<text class="st-clef" x="16" y="${yB(24) + F_CLEF_DOTS_ABOVE_BASELINE}" font-size="40">𝄢</text>`);
 
   const drawStaff = (list, y, ledgerRanges) => {
     const sorted = [...list].sort((a, b) => a.step - b.step);
-    let prev = null;
+    const headColumns = [];
     sorted.forEach(n => {
-      n.shift = prev && n.step - prev.step === 1 && !prev.shift;
-      n.x = X0 + (n.shift ? 15 : 0);
-      prev = n;
+      let col = 0;
+      while ((headColumns[col] || []).some(s => Math.abs(s - n.step) <= 1)) col++;
+      (headColumns[col] = headColumns[col] || []).push(n.step);
+      n.x = X0 + col * HEAD_WIDTH;
     });
-    const anyShift = sorted.some(n => n.shift);
+    sorted.forEach(n => { n.natural = !n.a && sorted.some(o => o !== n && o.step === n.step && o.a); });
     const ledgers = new Set();
     sorted.forEach(n => ledgerRanges(n.step).forEach(s => ledgers.add(s)));
-    ledgers.forEach(s => out.push(`<line class="st-ledger" x1="${X0 - 11}" x2="${X0 + (anyShift ? 26 : 11)}" y1="${y(s)}" y2="${y(s)}"/>`));
-    const columns = [];
-    [...sorted].reverse().filter(n => n.a).forEach(n => {
+    const ledgerRight = X0 + 11 + Math.max(0, headColumns.length - 1) * HEAD_WIDTH;
+    ledgers.forEach(s => out.push(`<line class="st-ledger" x1="${X0 - 11}" x2="${ledgerRight}" y1="${y(s)}" y2="${y(s)}"/>`));
+    const accColumns = [];
+    [...sorted].reverse().filter(n => n.a || n.natural).forEach(n => {
       let col = 0;
-      while ((columns[col] || []).some(s => Math.abs(s - n.step) < 6)) col++;
-      (columns[col] = columns[col] || []).push(n.step);
+      while ((accColumns[col] || []).some(s => Math.abs(s - n.step) < 6)) col++;
+      (accColumns[col] = accColumns[col] || []).push(n.step);
       n.accX = X0 - 16 - col * 11;
     });
     sorted.forEach(n => {
@@ -670,7 +685,7 @@ function staffSVG(notes) {
       out.push(`<g class="${n.ghost ? 'st-ghost' : ''}">`);
       out.push(`<ellipse class="st-head" cx="${n.x}" cy="${cy}" rx="7" ry="4.8"/>`);
       out.push(`<ellipse class="st-hole" cx="${n.x}" cy="${cy}" rx="3.4" ry="2.3" transform="rotate(-55 ${n.x} ${cy})"/>`);
-      if (n.a) out.push(`<text class="st-acc" x="${n.accX}" y="${cy + 5}" text-anchor="middle">${ACC_GLYPH[n.a]}</text>`);
+      if (n.a || n.natural) out.push(`<text class="st-acc" x="${n.accX}" y="${cy + 5}" text-anchor="middle">${n.natural ? NATURAL_SIGN : ACC_GLYPH[n.a]}</text>`);
       out.push('</g>');
     });
   };
@@ -689,6 +704,7 @@ function render() {
   const toneByPc = new Map(active ? active.tones.map(t => [t.pc, t]) : []);
   const ghosts = active ? missingPitches(active, A).filter(g => g.midi !== null) : [];
   const ghostByMidi = new Map(ghosts.map(g => [g.midi, g.tone]));
+  const apart = spellApart(A.mids);
 
   keyEls.forEach((el, m) => {
     const on = state.sel.has(m), ghost = !on && ghostByMidi.has(m);
@@ -696,7 +712,7 @@ function render() {
     el.classList.toggle('ghost', ghost);
     el.setAttribute('aria-pressed', on);
     const tone = on ? toneByPc.get(m % 12) : ghost ? ghostByMidi.get(m) : null;
-    el.querySelector('.dot').innerHTML = on || ghost ? noteHTML(tone || DEFAULT_SPELLING[m % 12]) : '';
+    el.querySelector('.dot').innerHTML = on || ghost ? noteHTML(tone || apart.get(m) || DEFAULT_SPELLING[m % 12]) : '';
     el.querySelector('.tag').innerHTML = tone ? degHTML(tone.deg) : '';
     el.setAttribute('aria-label', defaultOctaveLabel(m) + (ghost ? ', brakujący dźwięk akordu' : ''));
   });
@@ -730,9 +746,10 @@ function renderChords(A) {
 }
 
 function renderStaff(A, chord, ghosts) {
+  const apart = spellApart(A.mids);
   document.getElementById('now').innerHTML = chord ? symbolHTML(chord, A.bassPc)
-    : A.mids.length ? A.mids.map(m => noteHTML(DEFAULT_SPELLING[m % 12])).join(' ') : '&nbsp;';
-  const selected = A.mids.map(m => ({ midi: m, ...(chord ? chord.tones.find(t => t.pc === m % 12) : DEFAULT_SPELLING[m % 12]) }));
+    : A.mids.length ? A.mids.map(m => noteHTML(apart.get(m))).join(' ') : '&nbsp;';
+  const selected = A.mids.map(m => ({ midi: m, ...(chord ? chord.tones.find(t => t.pc === m % 12) : apart.get(m)) }));
   const notes = [...selected, ...ghosts.map(g => ({ midi: g.midi, ...g.tone, ghost: true }))];
   document.getElementById('staffbox').innerHTML = staffSVG(notes);
 }
